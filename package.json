@@ -1,0 +1,20 @@
+{
+  "name": "connect",
+  "version": "1.0.0",
+  "description": "a fetch client",
+  "main": "connect.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build":"tsc ./connect.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fsx950223/Connect.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fsx950223/Connect/issues"
+  },
+  "homepage": "https://github.com/fsx950223/Connect#readme"
+}
