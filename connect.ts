@@ -61,39 +61,57 @@ export const enum ReferrerPolicyEnums {
 interface IOptions {
     origin?: string;
     headerParam?: IHeaderParam;
-    messageKey?: string;
     credentials?: RequestCredentials;
     cache?: RequestCache;
-    redirect?: RequestRedirect;
     referrer?: string;
     referrerPolicy?: ReferrerPolicy;
     mode?: RequestMode;
     integrity?: string;
 }
 
-export interface IConnect {
-    post(url : string, requestParam : any, headerParam?: IHeaderParam) : Promise < any >;
-    get(url : string, requestParam?: IRequestParam, headerParam?: IHeaderParam) : Promise < any >;
-    put(url : string, requestParam?: any, headerParam?: IHeaderParam) : Promise < any >;
-    delete(url : string, requestParam?: IRequestParam, headerParam?: IHeaderParam) : Promise < any >;
-    patch(url : string, requestParam?: any, headerParam?: IHeaderParam) : Promise < any >;
-    head(url : string, requestParam?: IRequestParam, headerParam?: IHeaderParam) : Promise < any >;
-    options(url : string, requestParam?: IRequestParam, headerParam?: IHeaderParam) : Promise < any >;
-}
-
-export class Connect implements IConnect {
+export class Connect {
     private headerParam : IHeaderParam;
     private origin : string;
-    private messageKey : string;
     private credentials : RequestCredentials;
     private cache : RequestCache;
-    private redirect : RequestRedirect;
     private referrer : string;
     private referrerPolicy : ReferrerPolicy;
     private mode : RequestMode;
     private integrity : string;
     constructor(private domain : string, options?: IOptions) {
-        this.setKeys(this, options);
+        Object.assign(this,options);
+        ['post','put','patch'].map(method=>{
+            this[method]=async (url : string, requestParam : IRequestParam, options?: IOptions): Promise < any >=>{
+                url = this.resolveUrl(this.origin, this.domain, url);
+                const headers = new Headers({
+                    ...this.headerParam,
+                    ...options.headerParam
+                });
+                const requestBody = this.detectRequestParam(requestParam, headers);
+                const request = new Request(url, {
+                    method: 'post',
+                    body: requestBody,
+                    headers,
+                    ...this.generateOptions(options)
+                });
+                return this.pretreatment(await fetch(request)); 
+            }
+        });
+        ['get','head','options','delete'].map(method=>{
+                this[method]=async (url : string, requestParam?: IRequestParam, options?: IOptions) : Promise < any > =>{
+                const headers = new Headers({
+                    ...this.headerParam,
+                    ...options.headerParam
+                });
+                url = this.setUrl(url, requestParam);
+                const request = new Request(url, {
+                    method: 'get',
+                    headers,
+                    ...this.generateOptions(options)
+                });
+                return this.pretreatment(await fetch(request));
+            }
+        })
     }
     /**
      * 初始化全局参数
@@ -104,156 +122,31 @@ export class Connect implements IConnect {
      * @memberof Connect
      */
     static init(options : IOptions) {
-        Connect
-            .prototype
-            .setKeys(Connect.prototype, options);
-    }
-
-    async post(url : string, requestParam : IRequestParam, options?: IOptions) : Promise < any > {
-        url = this.resolveUrl(this.origin, this.domain, url);
-        const headers = new Headers({
-            ...this.headerParam,
-            ...options.headerParam
-        });
-        const requestBody = this.detectRequestParam(requestParam, headers.get('Content-Type'));
-        const request = new Request(url, {
-            method: 'post',
-            body: requestBody,
-            headers,
-            ...this.generateOptions(options)
-        });
-        return this.pretreatment(await fetch(request));
-    }
-    async get(url : string, requestParam?: IRequestParam, options?: IOptions) : Promise < any > {
-        const headers = new Headers({
-            ...this.headerParam,
-            ...options.headerParam
-        });
-        url = this.setUrl(url, requestParam);
-        const request = new Request(url, {
-            method: 'get',
-            headers,
-            ...this.generateOptions(options)
-        });
-        return this.pretreatment(await fetch(request));
-    }
-    async put(url : string, requestParam : IRequestParam, options?: IOptions) : Promise < any > {
-        url = this.resolveUrl(this.origin, this.domain, url);
-        const headers = new Headers({
-            ...this.headerParam,
-            ...options.headerParam
-        });
-        const requestBody = this.detectRequestParam(requestParam, headers.get('Content-Type'));
-        const request = new Request(url, {
-            method: 'put',
-            body: requestBody,
-            headers,
-            ...this.generateOptions(options)
-        });
-        return this.pretreatment(await fetch(request));
-    }
-
-    async delete(url : string, requestParam?: IRequestParam, options?: IOptions) : Promise < any > {
-        const headers = new Headers({
-            ...this.headerParam,
-            ...options.headerParam
-        });
-        url = this.setUrl(url, requestParam);
-        const request = new Request(url, {
-            method: 'delete',
-            headers,
-            ...this.generateOptions(options)
-        });
-        return this.pretreatment(await fetch(request));
-    }
-    /**
-     * patch请求
-     *
-     * @param {string} url 请求地址
-     * @param {*} requestParam 请求参数
-     * @param {IHeaderParam} [headerParam] 请求头
-     * @returns {Promise<any>} 返回预处理后的Promise
-     * @memberof Connect
-     */
-    async patch(url : string, requestParam : IRequestParam, options?: IOptions) : Promise < any > {
-        url = this.resolveUrl(this.origin, this.domain, url);
-        const headers = new Headers({
-            ...this.headerParam,
-            ...options.headerParam
-        });
-        const requestBody = this.detectRequestParam(requestParam, headers.get('Content-Type'));
-        const request = new Request(url, {
-            method: 'patch',
-            body: requestBody,
-            headers,
-            ...this.generateOptions(options)
-        });
-        return this.pretreatment(await fetch(request));
-    }
-    /**
-     * head请求
-     *
-     * @param {string} url 请求地址
-     * @param {IRequestParam} [requestParam] 请求参数
-     * @param {IHeaderParam} [headerParam] 请求头
-     * @returns {Promise<any>} 返回预处理后的Promise
-     * @memberof Connect
-     */
-    async head(url : string, requestParam?: IRequestParam, options?: IOptions) : Promise < any > {
-        const headers = new Headers({
-            ...this.headerParam,
-            ...options.headerParam
-        });
-        url = this.setUrl(url, requestParam);
-        const request = new Request(url, {
-            method: 'head',
-            headers,
-            ...this.generateOptions(options)
-        });
-        return this.pretreatment(await fetch(request));
+        Object.assign(Connect.prototype, options);
     }
 
     /**
-     * option请求
-     *
-     * @param {string} url 请求地址
-     * @param {IRequestParam} [requestParam] 请求参数
-     * @param {IOptions} options 请求头
-     * @returns {Promise<any>} 返回预处理后的Promise
-     * @memberof Connect
-     */
-    async options(url : string, requestParam?: IRequestParam, options?: IOptions) : Promise < any > {
-        const headers = new Headers({
-            ...this.headerParam,
-            ...options.headerParam
-        });
-        url = this.setUrl(url, requestParam);
-        const request = new Request(url, {
-            method: 'options',
-            headers,
-            ...this.generateOptions(options)
-        });
-        return this.pretreatment(await fetch(request));
-    }
-    /**
-     * 预处理函数
+     * 预处理函数,可以重写
      *
      * @private
      * @param {Response} response 响应体
      * @returns {Promise<any>} 预处理后的Promise
      * @memberof Connect
      */
-    private async pretreatment(response : Response) : Promise < any > {
-        try {
-            const result = await response.json();
-            if (response.ok) {
-                return result;
-            } else {
-                throw new Error(result.message);
+    public async pretreatment(response : Response) : Promise < any > {
+        if (response.ok) {
+            if (response.headers.get('Content-Type').includes('application/json')) {
+              const json = await response.json()
+              return json
+            } else if (response.headers.get('Content-Type').includes('text/html')) {
+              const text = await response.text()
+              return text
             }
-        } catch (err) {
-            throw new Error('连接故障');
-        }
+            return response
+          } else {
+            const json = await response.json
+            throw new Error(JSON.stringify(json))
+          }
     }
     /**
      * 将url与requestParam拼接成URL
@@ -283,24 +176,30 @@ export class Connect implements IConnect {
      * @memberof Connect
      */
     private resolveUrl(...params) {
-        return params.join('/');
+        if (params[2].startsWith('http')) {
+            return params[2]
+        }
+        return params.filter(param => !!param).join('/')
     }
 
-    private detectRequestParam(requestParam : IRequestParam, contentType : string) {
-        const generateFormData = (request : IRequestParam) => {
-            const formData = new FormData();
-            for (const param in request) {
-                if (request.hasOwnProperty(param)) {
-                    formData.set(param, request[param]);
-                }
+    private detectRequestParam(requestParam : IRequestParam, headers : Headers) {
+        const key = Reflect.ownKeys(requestParam)[0]
+        const type = Object.prototype.toString.call(requestParam[key as string]).split(' ')[1].slice(0, -1)
+        const generateFormData = (request) => {
+          const formData = new FormData()
+          for (const param in request) {
+            if (request.hasOwnProperty(param)) {
+              formData.set(param, request[param])
             }
-            return formData;
-        };
-        switch (contentType) {
-            case 'application/json':
-                return JSON.stringify(requestParam);
-            case 'multipart/form-data':
-                return generateFormData(requestParam);
+          }
+          return formData
+        }
+        switch (type) {
+          case 'File':
+            headers.delete('Content-Type')
+            return generateFormData(requestParam)
+          default:
+            return JSON.stringify(requestParam)
         }
     }
 
@@ -313,17 +212,5 @@ export class Connect implements IConnect {
             referrerPolicy: options.referrerPolicy || this.referrerPolicy,
             integrity: options.integrity || this.integrity
         };
-    }
-
-    private setKeys(source, options) {
-        if (options) {
-            const keys = Reflect
-                .ownKeys(source)
-                .filter(key => typeof key !== 'function' && key !== 'constructor');
-            for (const key in keys) {
-                if (key in options) 
-                    source[key] = options[key];
-                }
-            }
     }
 }
