@@ -1,5 +1,5 @@
 {
-  "name": "fetch-cli",
+  "name": "@fsx950223/fetch-cli",
   "version": "1.0.0",
   "description": "a fetch client",
   "main": "connect.js",

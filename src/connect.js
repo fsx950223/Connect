@@ -1,4 +1,4 @@
-export class Connect {
+export default class Connect {
     constructor(domain, options) {
         this.domain = domain;
         Object.assign(this, options);
@@ -105,8 +105,7 @@ export class Connect {
         return params.filter(param => !!param).join('/');
     }
     detectRequestParam(requestParam, headers) {
-        const key = Reflect.ownKeys(requestParam)[0];
-        const type = Object.prototype.toString.call(requestParam[key]).split(' ')[1].slice(0, -1);
+        const type = headers.get('Content-Type');
         const generateFormData = (request) => {
             const formData = new FormData();
             for (const param in request) {
@@ -117,10 +116,9 @@ export class Connect {
             return formData;
         };
         switch (type) {
-            case 'File':
-                headers.delete('Content-Type');
+            case null:
                 return generateFormData(requestParam);
-            default:
+            case 'application/json':
                 return JSON.stringify(requestParam);
         }
     }

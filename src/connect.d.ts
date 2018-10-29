@@ -6,40 +6,6 @@
 interface IHeaderParam {
     readonly [propName: string]: string;
 }
-export declare const enum CredentialsEnums {
-    omit = 0,
-    sameOrigin = 1,
-    include = 2
-}
-export declare const enum CacheEnums {
-    default = 0,
-    noStore = 1,
-    reload = 2,
-    noCache = 3,
-    forceCache = 4,
-    onlyIfCached = 5
-}
-export declare const enum RedirectEnums {
-    follow = 0,
-    error = 1,
-    manual = 2
-}
-export declare const enum ModeEnums {
-    cors = 0,
-    noCors = 1,
-    sameOrigin = 2
-}
-export declare const enum ReferrerEnums {
-    noReferrer = 0,
-    client = 1
-}
-export declare const enum ReferrerPolicyEnums {
-    noReferrer = 0,
-    noReferrerWhenDowngrade = 1,
-    origin = 2,
-    originWhenCrossOrigin = 3,
-    unsafeUrl = 4
-}
 /**
  * 选项接口
  *
@@ -55,7 +21,7 @@ interface IOptions {
     mode?: RequestMode;
     integrity?: string;
 }
-export declare class Connect {
+export default class Connect {
     private domain;
     private headerParam;
     private origin;

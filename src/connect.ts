@@ -15,44 +15,6 @@ interface IHeaderParam {
     readonly[propName : string] : string;
 }
 
-export const enum CredentialsEnums {
-    omit,
-    sameOrigin,
-    include
-}
-export const enum CacheEnums {
-    default,
-    noStore,
-    reload,
-    noCache,
-    forceCache,
-    onlyIfCached
-}
-
-export const enum RedirectEnums {
-    follow,
-    error,
-    manual
-}
-
-export const enum ModeEnums {
-    cors,
-    noCors,
-    sameOrigin
-}
-
-export const enum ReferrerEnums {
-    noReferrer,
-    client
-}
-
-export const enum ReferrerPolicyEnums {
-    noReferrer,
-    noReferrerWhenDowngrade,
-    origin,
-    originWhenCrossOrigin,
-    unsafeUrl
-}
 /**
  * 选项接口
  *
@@ -69,7 +31,7 @@ interface IOptions {
     integrity?: string;
 }
 
-export class Connect {
+export default class Connect {
     private headerParam : IHeaderParam;
     private origin : string;
     private credentials : RequestCredentials;
@@ -143,10 +105,10 @@ export class Connect {
               return text
             }
             return response
-          } else {
+        } else {
             const json = await response.json
             throw new Error(JSON.stringify(json))
-          }
+        }
     }
     /**
      * 将url与requestParam拼接成URL
@@ -183,8 +145,7 @@ export class Connect {
     }
 
     private detectRequestParam(requestParam : IRequestParam, headers : Headers) {
-        const key = Reflect.ownKeys(requestParam)[0]
-        const type = Object.prototype.toString.call(requestParam[key as string]).split(' ')[1].slice(0, -1)
+        const type=headers.get('Content-Type')
         const generateFormData = (request) => {
           const formData = new FormData()
           for (const param in request) {
@@ -195,10 +156,9 @@ export class Connect {
           return formData
         }
         switch (type) {
-          case 'File':
-            headers.delete('Content-Type')
+          case null:
             return generateFormData(requestParam)
-          default:
+          case 'application/json':
             return JSON.stringify(requestParam)
         }
     }
